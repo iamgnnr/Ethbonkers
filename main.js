@@ -1,11 +1,16 @@
 import { getLatestBlockAndTransactions } from './eth-data';
+import { JsonRpcProvider } from 'ethers';
+
 
 
 let INTERSECTED;
 const pointer = new THREE.Vector2();
+const mouse = new THREE.Vector2();
+const objects = [];
 
 
-const sphereToTX = [];
+
+const sphereToTX = {};
 // Three.js scene setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -14,9 +19,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 
-document.addEventListener('mousemove', onPointerMove);
-
 window.addEventListener('resize', onWindowResize);
+document.addEventListener('mousemove', onPointerMove);
+document.addEventListener('click', onClick);
+
 
 
 const light = new THREE.DirectionalLight(0xffffff, 3);
@@ -42,8 +48,9 @@ function createSphere(x, y, z, txh) {
     const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     scene.add(sphereMesh);
-    sphereToTX.push({ [sphereMesh.id]: txh });
-    console.log(sphereToTX);
+    sphereToTX[sphereMesh.id] = txh;
+    objects.push(sphereMesh);
+
 
 
 
@@ -84,7 +91,6 @@ function onPointerMove(event) {
 
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
-    console.log(pointer.y);
 
 }
 
@@ -96,6 +102,41 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
+
+
+async function onClick(event) {
+    // Calculate the mouse position in normalized device coordinates
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    const provider = new JsonRpcProvider(providerUrl);
+
+    // Update the raycaster's origin based on the mouse position
+    raycaster.setFromCamera(mouse, camera);
+
+    // Perform the raycasting
+    const intersects = raycaster.intersectObjects(objects);
+
+    if (intersects.length > 0) {
+        // An object was clicked
+        const clickedObject = intersects[0].object;
+
+        // Access the ID of the clicked object
+        const objectId = clickedObject.id;
+
+        // You can use the objectId for further actions
+        console.log('Clicked on object with ID:', objectId);
+        let hash = sphereToTX[objectId]; 
+        console.log(hash);
+     const tx = await provider.getTransaction(hash);
+         console.log(tx);
+
+    }
+    else {
+        console.log(intersects.length);
+        console.log("Your fucked.")
+    }
+}
+
 
 // Animation function
 function animate() {
@@ -118,7 +159,6 @@ function animate() {
     if (intersects.length > 0) {
 
         if (INTERSECTED != intersects[0].object) {
-            console.log("Intersected!")
             if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
 
             INTERSECTED = intersects[0].object;
