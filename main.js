@@ -1,5 +1,10 @@
 import { getLatestBlockAndTransactions } from './eth-data';
 
+
+let INTERSECTED;
+const pointer = new THREE.Vector2();
+
+
 const sphereToTX = [];
 // Three.js scene setup
 const scene = new THREE.Scene();
@@ -7,6 +12,17 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+
+document.addEventListener('mousemove', onPointerMove);
+
+window.addEventListener('resize', onWindowResize);
+
+
+const light = new THREE.DirectionalLight(0xffffff, 3);
+light.position.set(1, 1, 1).normalize();
+scene.add(light);
+
 
 // Cannon.js physics setup
 const world = new CANNON.World();
@@ -18,13 +34,12 @@ const groundBody = new CANNON.Body({ mass: 0 });
 groundBody.addShape(groundShape);
 groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 world.addBody(groundBody);
+let raycaster = new THREE.Raycaster();
 
-// Create spheres and add them to the scene
-const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 
 function createSphere(x, y, z, txh) {
-
+    const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     scene.add(sphereMesh);
     sphereToTX.push({ [sphereMesh.id]: txh });
@@ -45,7 +60,7 @@ function createSphere(x, y, z, txh) {
 
     // Add a callback to keep the mesh position in sync with the body
     sphereBody.addEventListener('collide', function (event) {
-        console.log('Sphere collided with', event.body);
+        // console.log('Sphere collided with', event.body);
     });
 }
 
@@ -54,14 +69,31 @@ const providerUrl = 'https://eth-mainnet.blastapi.io/7ba8e1ac-14a0-4e49-a96e-adb
 const block = await getLatestBlockAndTransactions(providerUrl);
 
 // Create falling spheres
-if (2===2) {
-    for (let i = 0; i < 10; i++) {
+if (block) {
+    for (let i = 0; i < block.transactionHashes.length; i++) {
         const x = Math.random() * 8 - 4; // Random x position within the scene
         const y = 5; // Initial height
         const z = Math.random() * 8 - 4; // Random z position within the scene
         const txh = block.transactionHashes[i];
         createSphere(x, y, z, txh);
     }
+
+}
+
+function onPointerMove(event) {
+
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    console.log(pointer.y);
+
+}
+
+function onWindowResize() {
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
 
@@ -79,6 +111,29 @@ function animate() {
             body.threeMesh.quaternion.copy(body.quaternion);
         }
     });
+    raycaster.setFromCamera(pointer, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children, true);
+
+    if (intersects.length > 0) {
+
+        if (INTERSECTED != intersects[0].object) {
+            console.log("Intersected!")
+            if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+
+            INTERSECTED = intersects[0].object;
+            INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+            INTERSECTED.material.emissive.setHex(0xff0000);
+
+        }
+
+    } else {
+
+        if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+
+        INTERSECTED = null;
+
+    }
 
     renderer.render(scene, camera);
 }
