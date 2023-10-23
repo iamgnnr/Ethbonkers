@@ -103,7 +103,7 @@ function onWindowResize() {
 
 }
 
-
+// Add an event listener to your existing `onClick` function
 async function onClick(event) {
     // Calculate the mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -125,17 +125,27 @@ async function onClick(event) {
 
         // You can use the objectId for further actions
         console.log('Clicked on object with ID:', objectId);
-        let hash = sphereToTX[objectId]; 
+        let hash = sphereToTX[objectId];
         console.log(hash);
-     const tx = await provider.getTransaction(hash);
-         console.log(tx);
 
-    }
-    else {
+        // Fetch transaction data
+        const tx = await provider.getTransaction(hash);
+
+        // Display transaction data in the sidebar
+        const sidebar = document.getElementById('sidebar');
+        sidebar.innerHTML = JSON.stringify(tx, null, 2);
+
+        // Slide in the sidebar
+        sidebar.style.right = '0';
+    } else {
         console.log(intersects.length);
-        console.log("Your fucked.")
+        console.log("Your operation was unsuccessful.");
     }
 }
+
+
+
+
 
 
 // Animation function
