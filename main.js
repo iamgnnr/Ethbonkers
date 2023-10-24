@@ -29,6 +29,9 @@ const mouse = new THREE.Vector2();
 const pointer = new THREE.Vector2();
 const sphereToTX = {};
 
+const sphereMaterial = new CANNON.Material();
+sphereMaterial.restitution = 0.9;
+
 function setupScene() {
     // Initialize the scene, camera, and renderer
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -49,18 +52,33 @@ function setupScene() {
 }
 
 function createSphere(x, y, z, txh) {
+    const spherePhysicsMaterial = new CANNON.Material();
+    spherePhysicsMaterial.restitution = 0.9;
+
+    // Create a Cannon.js sphere shape and body
+    const spherePhysicsGeometry = new CANNON.Sphere(0.2); // Use CANNON.Sphere for collision
+    const spherePhysicsBody = new CANNON.Body({ mass: 1, shape: spherePhysicsGeometry, material: spherePhysicsMaterial });
+    spherePhysicsBody.position.set(x, y, z);
+    world.addBody(spherePhysicsBody);
+
     const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
     const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     scene.add(sphereMesh);
+
+    spherePhysicsBody.threeMesh = sphereMesh;
     sphereToTX[sphereMesh.id] = txh;
     objects.push(sphereMesh);
 
+
     const sphereShape = new CANNON.Sphere(0.2);
     const sphereBody = new CANNON.Body({ mass: 1, shape: sphereShape });
+
+
     sphereBody.position.set(x, y, z);
     world.addBody(sphereBody);
     sphereBody.threeMesh = sphereMesh;
+
 
     sphereBody.addEventListener('collide', function (event) {
         // Handle collision
@@ -105,8 +123,15 @@ function createPopUp(txData) {
             sidebar.appendChild(p);
         }
     }
+
     sidebar.style.display = 'block';
 }
+
+function killPopUp() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.style.display = 'none';
+}
+
 
 function onPointerMove(event) {
 
@@ -114,6 +139,7 @@ function onPointerMove(event) {
     pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
 }
+
 
 
 function onClick(event) {
@@ -129,6 +155,7 @@ function onClick(event) {
         getTXData(objectId);
     } else {
         console.log('No object clicked.');
+        killPopUp();
     }
 }
 
@@ -157,12 +184,19 @@ function animate() {
 
 // Initialize the Cannon.js physics world
 const world = new CANNON.World();
-world.gravity.set(0, -10, 0);
+
+world.gravity.set(0, -20, 0);
+
+const planePhysicsMaterial = new CANNON.Material();
+planePhysicsMaterial.restitution = -29.9;
 const groundShape = new CANNON.Plane();
-const groundBody = new CANNON.Body({ mass: 0 });
+const groundBody = new CANNON.Body({ mass: -5, shape: groundShape, material: planePhysicsMaterial });
 groundBody.addShape(groundShape);
 groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 world.addBody(groundBody);
+
+
+
 
 // Initialize the 3D scene
 setupScene();
