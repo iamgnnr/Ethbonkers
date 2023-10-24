@@ -10,8 +10,15 @@
 </head>
 
 <body>
-  <div id="app"></div>
-  <div id="sidebar">
+  <div id="app">
+    <div class="button-container">
+      <button class="refresh" onclick="location.reload();">Get New Block</button>
+    </div>
+
+  </div>
+  <div class="sidebar" id="sidebar">
+    <button class="open-button" id="openButton">Open Sidebar</button>
+
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>

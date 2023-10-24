@@ -1,6 +1,7 @@
 import { JsonRpcProvider } from 'ethers';
 
 
+
 export async function getLatestBlockAndTransactions(providerUrl) {
     // Initialize a provider
     const provider = new JsonRpcProvider(providerUrl);
@@ -129,8 +130,32 @@ function onWindowResize() {
 
 }
 
+async function getTXData(objId) {
+    const provider = new JsonRpcProvider(providerUrl);
+    let hash = sphereToTX[objId];
+    console.log(hash);
+
+    // Fetch transaction data
+    const tx = await provider.getTransaction(hash);
+    createPopUp(tx);
+}
+
+ function createPopUp(txData) {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.innerHTML = '';
+            for (const key in txData) {
+                if (txData.hasOwnProperty(key)) {
+                    const p = document.createElement('p');
+                    p.className = 'transaction-data';
+                    p.innerText = `${key}: ${txData[key]}`;
+                    sidebar.appendChild(p);
+                }
+            }
+            sidebar.style.display = 'block';
+        }
+
 // Add an event listener to your existing `onClick` function
-async function onClick(event) {
+function onClick(event) {
     // Calculate the mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -149,20 +174,8 @@ async function onClick(event) {
         // Access the ID of the clicked object
         const objectId = clickedObject.id;
 
-        // You can use the objectId for further actions
-        console.log('Clicked on object with ID:', objectId);
-        let hash = sphereToTX[objectId];
-        console.log(hash);
+        getTXData(objectId);
 
-        // Fetch transaction data
-        const tx = await provider.getTransaction(hash);
-
-        // Display transaction data in the sidebar
-        const sidebar = document.getElementById('sidebar');
-        sidebar.innerHTML = JSON.stringify(tx, null, 2);
-
-        // Slide in the sidebar
-        sidebar.style.right = '0';
     } else {
         console.log(intersects.length);
         console.log("Your operation was unsuccessful.");
@@ -188,6 +201,7 @@ function animate() {
             body.threeMesh.quaternion.copy(body.quaternion);
         }
     });
+
     raycaster.setFromCamera(pointer, camera);
 
     const intersects = raycaster.intersectObjects(scene.children, true);
@@ -215,7 +229,7 @@ function animate() {
 }
 
 // Set camera position
-camera.position.z = 5;
+camera.position.z = 10;
 
 // Start the animation
 animate();
