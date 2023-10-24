@@ -2,26 +2,26 @@ import { JsonRpcProvider } from 'ethers';
 
 
 export async function getLatestBlockAndTransactions(providerUrl) {
-  // Initialize a provider
-  const provider = new JsonRpcProvider(providerUrl);
-  try {
-    // Get the latest block number
-    const blockNumber = await provider.getBlockNumber();
+    // Initialize a provider
+    const provider = new JsonRpcProvider(providerUrl);
+    try {
+        // Get the latest block number
+        const blockNumber = await provider.getBlockNumber();
 
-    // Get the latest block details
-    const block = await provider.getBlock(blockNumber);
+        // Get the latest block details
+        const block = await provider.getBlock(blockNumber);
 
-    // Get the list of transaction hashes in the latest block
-    const transactionHashes = block.transactions;
+        // Get the list of transaction hashes in the latest block
+        const transactionHashes = block.transactions;
 
-    return {
-      blockNumber,
-      block,
-      transactionHashes,
-    };
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  }
+        return {
+            blockNumber,
+            block,
+            transactionHashes,
+        };
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
 }
 
 
