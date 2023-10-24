@@ -1,16 +1,42 @@
-import { getLatestBlockAndTransactions } from './eth-data';
 import { JsonRpcProvider } from 'ethers';
+
+
+export async function getLatestBlockAndTransactions(providerUrl) {
+  // Initialize a provider
+  const provider = new JsonRpcProvider(providerUrl);
+  try {
+    // Get the latest block number
+    const blockNumber = await provider.getBlockNumber();
+
+    // Get the latest block details
+    const block = await provider.getBlock(blockNumber);
+
+    // Get the list of transaction hashes in the latest block
+    const transactionHashes = block.transactions;
+
+    return {
+      blockNumber,
+      block,
+      transactionHashes,
+    };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
 
 
 
 let INTERSECTED;
-const pointer = new THREE.Vector2();
 const mouse = new THREE.Vector2();
 const objects = [];
+const pointer = new THREE.Vector2();
 
 
 
 const sphereToTX = {};
+
+
 // Three.js scene setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
