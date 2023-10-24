@@ -1,20 +1,14 @@
 import { JsonRpcProvider } from 'ethers';
 
+const providerUrl = 'https://eth-mainnet.blastapi.io/7ba8e1ac-14a0-4e49-a96e-adb82420a114';
 
 
-export async function getLatestBlockAndTransactions(providerUrl) {
-    // Initialize a provider
-    const provider = new JsonRpcProvider(providerUrl);
+async function getLatestBlockAndTransactions(providerUrl) {
     try {
-        // Get the latest block number
+        const provider = new JsonRpcProvider(providerUrl);
         const blockNumber = await provider.getBlockNumber();
-
-        // Get the latest block details
         const block = await provider.getBlock(blockNumber);
-
-        // Get the list of transaction hashes in the latest block
         const transactionHashes = block.transactions;
-
         return {
             blockNumber,
             block,
@@ -22,53 +16,37 @@ export async function getLatestBlockAndTransactions(providerUrl) {
         };
     } catch (error) {
         console.error('Error fetching data:', error);
+        return null;
     }
 }
 
-
-
-
-let INTERSECTED;
-const mouse = new THREE.Vector2();
-const objects = [];
-const pointer = new THREE.Vector2();
-
-
-
-const sphereToTX = {};
-
-
-// Three.js scene setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const objects = [];
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const pointer = new THREE.Vector2();
+const sphereToTX = {};
 
+function setupScene() {
+    // Initialize the scene, camera, and renderer
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    camera.position.z = 10;
 
-window.addEventListener('resize', onWindowResize);
-document.addEventListener('mousemove', onPointerMove);
-document.addEventListener('click', onClick);
+    // Add lighting
+    const light = new THREE.DirectionalLight(0xffffff, 3);
+    light.position.set(1, 1, 1).normalize();
+    scene.add(light);
 
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize);
 
-
-const light = new THREE.DirectionalLight(0xffffff, 3);
-light.position.set(1, 1, 1).normalize();
-scene.add(light);
-
-
-// Cannon.js physics setup
-const world = new CANNON.World();
-world.gravity.set(0, -10, 0);
-
-// Create a ground plane
-const groundShape = new CANNON.Plane();
-const groundBody = new CANNON.Body({ mass: 0 });
-groundBody.addShape(groundShape);
-groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-world.addBody(groundBody);
-let raycaster = new THREE.Raycaster();
-
+    // Handle mouse movement and clicks
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('click', onClick);
+}
 
 function createSphere(x, y, z, txh) {
     const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
@@ -78,40 +56,56 @@ function createSphere(x, y, z, txh) {
     sphereToTX[sphereMesh.id] = txh;
     objects.push(sphereMesh);
 
-
-
-
     const sphereShape = new CANNON.Sphere(0.2);
-
     const sphereBody = new CANNON.Body({ mass: 1, shape: sphereShape });
-
     sphereBody.position.set(x, y, z);
     world.addBody(sphereBody);
-
-    // Link the Three.js mesh to the Cannon.js body
     sphereBody.threeMesh = sphereMesh;
 
-
-    // Add a callback to keep the mesh position in sync with the body
     sphereBody.addEventListener('collide', function (event) {
-        // console.log('Sphere collided with', event.body);
+        // Handle collision
     });
 }
 
-const providerUrl = 'https://eth-mainnet.blastapi.io/7ba8e1ac-14a0-4e49-a96e-adb82420a114';
+async function initialize() {
+    const block = await getLatestBlockAndTransactions(providerUrl);
 
-const block = await getLatestBlockAndTransactions(providerUrl);
-
-// Create falling spheres
-if (block) {
-    for (let i = 0; i < block.transactionHashes.length; i++) {
-        const x = Math.random() * 8 - 4; // Random x position within the scene
-        const y = 5; // Initial height
-        const z = Math.random() * 8 - 4; // Random z position within the scene
-        const txh = block.transactionHashes[i];
-        createSphere(x, y, z, txh);
+    if (block) {
+        for (let i = 0; i < block.transactionHashes.length; i++) {
+            const x = Math.random() * 8 - 4;
+            const y = 5;
+            const z = Math.random() * 8 - 4;
+            const txh = block.transactionHashes[i];
+            createSphere(x, y, z, txh);
+        }
     }
+}
 
+
+async function getTXData(objId) {
+    const provider = new JsonRpcProvider(providerUrl);
+    const hash = sphereToTX[objId];
+    try {
+        const tx = await provider.getTransaction(hash);
+        createPopUp(tx);
+    } catch (error) {
+        console.error('Error fetching transaction data:', error);
+    }
+}
+
+function createPopUp(txData) {
+    // Create a popup with transaction data
+    const sidebar = document.getElementById('sidebar');
+    sidebar.innerHTML = '';
+    for (const key in txData) {
+        if (txData.hasOwnProperty(key)) {
+            const p = document.createElement('p');
+            p.className = 'transaction-data';
+            p.innerText = `${key}: ${txData[key]}`;
+            sidebar.appendChild(p);
+        }
+    }
+    sidebar.style.display = 'block';
 }
 
 function onPointerMove(event) {
@@ -121,77 +115,33 @@ function onPointerMove(event) {
 
 }
 
-function onWindowResize() {
 
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-}
-
-async function getTXData(objId) {
-    const provider = new JsonRpcProvider(providerUrl);
-    let hash = sphereToTX[objId];
-    console.log(hash);
-
-    // Fetch transaction data
-    const tx = await provider.getTransaction(hash);
-    createPopUp(tx);
-}
-
- function createPopUp(txData) {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.innerHTML = '';
-            for (const key in txData) {
-                if (txData.hasOwnProperty(key)) {
-                    const p = document.createElement('p');
-                    p.className = 'transaction-data';
-                    p.innerText = `${key}: ${txData[key]}`;
-                    sidebar.appendChild(p);
-                }
-            }
-            sidebar.style.display = 'block';
-        }
-
-// Add an event listener to your existing `onClick` function
 function onClick(event) {
-    // Calculate the mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    const provider = new JsonRpcProvider(providerUrl);
 
-    // Update the raycaster's origin based on the mouse position
     raycaster.setFromCamera(mouse, camera);
-
-    // Perform the raycasting
     const intersects = raycaster.intersectObjects(objects);
 
     if (intersects.length > 0) {
-        // An object was clicked
         const clickedObject = intersects[0].object;
-
-        // Access the ID of the clicked object
         const objectId = clickedObject.id;
-
         getTXData(objectId);
-
     } else {
-        console.log(intersects.length);
-        console.log("Your operation was unsuccessful.");
+        console.log('No object clicked.');
     }
 }
 
+function onWindowResize() {
+    // Handle window resizing
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
-
-
-
-
-// Animation function
 function animate() {
+    // Animation loop
     requestAnimationFrame(animate);
-
-    // Step the Cannon.js world
     world.step(1 / 60);
 
     // Update sphere positions
@@ -202,34 +152,23 @@ function animate() {
         }
     });
 
-    raycaster.setFromCamera(pointer, camera);
-
-    const intersects = raycaster.intersectObjects(scene.children, true);
-
-    if (intersects.length > 0) {
-
-        if (INTERSECTED != intersects[0].object) {
-            if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-            INTERSECTED = intersects[0].object;
-            INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-            INTERSECTED.material.emissive.setHex(0xff0000);
-
-        }
-
-    } else {
-
-        if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-        INTERSECTED = null;
-
-    }
-
     renderer.render(scene, camera);
 }
 
-// Set camera position
-camera.position.z = 10;
+// Initialize the Cannon.js physics world
+const world = new CANNON.World();
+world.gravity.set(0, -10, 0);
+const groundShape = new CANNON.Plane();
+const groundBody = new CANNON.Body({ mass: 0 });
+groundBody.addShape(groundShape);
+groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+world.addBody(groundBody);
 
-// Start the animation
+// Initialize the 3D scene
+setupScene();
+
+// Start the animation loop
 animate();
+
+// Initialize the 3D objects
+initialize();
