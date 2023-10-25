@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from 'ethers';
+import logo from '/eth.png'
 
 const providerUrl = 'https://eth-mainnet.blastapi.io/7ba8e1ac-14a0-4e49-a96e-adb82420a114';
 
@@ -40,8 +41,12 @@ function setupScene() {
 
     // Add lighting
     const light = new THREE.DirectionalLight(0xffffff, 3);
+    const light2 = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
     light.position.set(1, 1, 1).normalize();
+    light.position.set(3, 3, 3).normalize();
     scene.add(light);
+    scene.add(light2);
+
 
     // Handle window resize
     window.addEventListener('resize', onWindowResize);
@@ -64,7 +69,25 @@ function createSphere(x, y, z, txh) {
     const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
     const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    scene.add(sphereMesh);
+    const loader = new THREE.TextureLoader();
+    loader.load(logo, function (texture) {
+
+        texture.wrapS = THREE.ClampToEdgeWrapping;
+
+        // Scale the texture to fit the sphere
+        const xscale = 6; // Adjust the scale as needed
+        const yscale = 3;
+        texture.repeat.set(xscale, yscale);
+
+        // Center the texture on the sphere
+        const offsetX = (1 - xscale) / 2;
+        const offsetY = (1 - yscale) / 2;
+        texture.offset.set(offsetX, offsetY);
+
+
+        sphereMaterial.map = texture;
+        scene.add(sphereMesh);
+    });
 
     spherePhysicsBody.threeMesh = sphereMesh;
     sphereToTX[sphereMesh.id] = txh;
@@ -154,7 +177,6 @@ function onClick(event) {
         const objectId = clickedObject.id;
         getTXData(objectId);
     } else {
-        console.log('No object clicked.');
         killPopUp();
     }
 }
@@ -182,21 +204,17 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Initialize the Cannon.js physics world
 const world = new CANNON.World();
+world.gravity.set(0, -1.2, 0);
 
-world.gravity.set(0, -20, 0);
-
-const planePhysicsMaterial = new CANNON.Material();
-planePhysicsMaterial.restitution = -29.9;
+// Create a Cannon.js plane shape and body
 const groundShape = new CANNON.Plane();
-const groundBody = new CANNON.Body({ mass: -5, shape: groundShape, material: planePhysicsMaterial });
-groundBody.addShape(groundShape);
-groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+const groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
+
 world.addBody(groundBody);
 
-
-
+// Make sure the plane is flat (horizontal)
+groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 
 // Initialize the 3D scene
 setupScene();
@@ -206,3 +224,5 @@ animate();
 
 // Initialize the 3D objects
 initialize();
+
+
