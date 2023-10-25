@@ -72,10 +72,11 @@ function createSphere(x, y, z, txh) {
     const loader = new THREE.TextureLoader();
     loader.load(logo, function (texture) {
 
-        texture.wrapS = THREE.ClampToEdgeWrapping;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
 
         // Scale the texture to fit the sphere
-        const xscale = 6; // Adjust the scale as needed
+        const xscale = 7; // Adjust the scale as needed
         const yscale = 3;
         texture.repeat.set(xscale, yscale);
 
