@@ -40,8 +40,8 @@ function setupScene() {
     camera.position.z = 10;
 
     // Add lighting
-    const light = new THREE.DirectionalLight(0xffffff, 3);
-    const light2 = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+    const light = new THREE.DirectionalLight(0x8384d6, 3);
+    const light2 = new THREE.HemisphereLight(0xffffbb, 0xFFFF00, 1);
     light.position.set(1, 1, 1).normalize();
     light.position.set(3, 3, 3).normalize();
     scene.add(light);
@@ -67,7 +67,7 @@ function createSphere(x, y, z, txh) {
     world.addBody(spherePhysicsBody);
 
     const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-    const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+    const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0x8384d6 });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
     const loader = new THREE.TextureLoader();
     loader.load(logo, function (texture) {
