@@ -5,20 +5,25 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vite App</title>
+  <title>Ethereum Visuals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
   <div id="app">
     <div class="button-container">
-      <button class="refresh" onclick="location.reload();">Examine Latest Block</button>
+      <button class="refresh button-1" onclick="location.reload();">Examine Latest Block</button>
     </div>
 
   </div>
   <div class="sidebar-container">
     <div class="sidebar" id="sidebar" onclick="(function() { this.style.display = 'none'; }).call(this);">
-    </div>  
+    </div>
 
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
