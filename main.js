@@ -140,7 +140,8 @@ function createPopUp(txData) {
     const sidebar = document.getElementById('sidebar');
     sidebar.innerHTML = '';
     for (const key in txData) {
-        if (txData.hasOwnProperty(key)) {
+        if (txData.hasOwnProperty(key) && key !== 'provider' && key !== 'index' && key !== 'signature' && key !== 'accessList') {
+        
             const p = document.createElement('p');
             p.className = 'transaction-data';
             p.innerText = `${key}: ${txData[key]}`;
