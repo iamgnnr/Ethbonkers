@@ -80,7 +80,9 @@ canvas {
   background-color: #261535;
 }
 
-p {
+.instructions {
   color: white;
   font-size: 14px;
+  position: fixed;
+  padding-top: 5em;
 }
