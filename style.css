@@ -81,3 +81,8 @@ canvas {
 .button-1:focus {
   background-color: #261535;
 }
+
+p {
+  color: white;
+  font-size: 14px;
+}
